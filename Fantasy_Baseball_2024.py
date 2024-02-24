@@ -147,7 +147,7 @@ league_2223_df.to_csv('/home/adbucks/Downloads/league_2223.csv')
 
 # Now we'll get into columns that we can drop 
 drop_columns = ['Team_x', 'Position_x', 'Age_x', 'Salary_x', 
-                'Player_y', 'Team_y', 'Position_y', 'Age_y', 'Salary_y']
+                'Player_y', 'Team_y', 'Age_y', 'Salary_y']
 
 # we'll drop these columns 
 league_2223_df = league_2223_df.drop(columns = drop_columns)
@@ -175,3 +175,92 @@ active_players_23 = league_2223_df[league_2223_df['Status_23'] != 'FA']
 
 # Let's take a look at the data 
 print(active_players_23.head())
+
+# Let's take a csv look for some roster cutting 
+active_players_23.to_csv('/home/adbucks/Downloads/active_players_23.csv') 
+mof_hist_data.to_csv('/home/adbucks/Downloads/mof_hist_data.csv')
+
+'''
+
+3. The Replacement Project
+
+'''
+
+# Let's first start by getting a position percentile for all players, so we can see how our team does and how "rare" each player is in terms of percentage 
+
+# We'll start by getting the percentiles for each position 
+# Let's start by renaming the position column, and then pull out the first position as 
+# the primary position 
+
+active_players_23 = active_players_23.rename(columns = {'Position_y': 'Position'}) 
+
+# Let's take a look at the data 
+
+print(active_players_23.head()) 
+
+# Now we want to get the primary position 
+
+#active_players_23['Primary Position'] = active_players_23['Position'].str.split('/').str[0] 
+# trying another method 
+def left(s, amount):
+    return s[:amount]
+
+# trying to make a left equivalent to redshift/SQL
+# Trying this with our column now 
+active_players_23['Primary Position'] = active_players_23['Position'].apply(lambda x: left(x, 2))
+
+# Let's take a look at the data 
+print(active_players_23.head()) 
+print(active_players_23['Primary Position'].value_counts())
+
+# Let's look at our catchers and test that this works as intended 
+# Seems to work! 
+
+# Now we can work on getting our percentiles by position 
+# For our team specifically, let's look at starting pitchers and outfielders 
+# We'll start with starting pitchers 
+
+pitchers = active_players_23[active_players_23['Primary Position'] == 'SP'] 
+
+# We'll try and get a percentile for '23 points scored now 
+
+pitchers['Percentile_23'] = pitchers['FPts_23'].rank(pct = True) 
+pitchers['Percentile_22'] = pitchers['FPts_22'].rank(pct = True)
+
+# Let's take a look at the new column 
+print(pitchers.head())
+print(pitchers['Percentile_23'].describe())
+print(pitchers['Percentile_23'].head())
+print(pitchers['Percentile_23'].value_counts())
+
+# Let's look at Yu Darvish 
+print(pitchers[pitchers['Player_x'] == 'Yu Darvish'])
+
+# Let's get a pitchers csv before moving to outfielders 
+
+pitchers.to_csv('/home/adbucks/Downloads/pitchers.csv') 
+
+# Now we can do the same for outfielders 
+
+outfielders = active_players_23[active_players_23['Primary Position'] == 'OF'] 
+
+# We'll try and get a percentile for '23 points scored now 
+
+outfielders['Percentile_23'] = outfielders['FPts_23'].rank(pct = True) 
+outfielders['Percentile_22'] = outfielders['FPts_22'].rank(pct = True) 
+
+# Let's take a look at the new column 
+print(outfielders.head()) 
+print(outfielders['Percentile_23'].describe()) 
+print(outfielders['Percentile_23'].head()) 
+print(outfielders['Percentile_23'].value_counts()) 
+
+# Let's look at Cedric Mullins 
+print(outfielders[outfielders['Player_x'] == 'Cedric Mullins'])
+
+# Let's get an outfielders csv before moving to the next position 
+
+outfielders.to_csv('/home/adbucks/Downloads/outfielders.csv') 
+
+
+
