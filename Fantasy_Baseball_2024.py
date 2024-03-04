@@ -262,5 +262,230 @@ print(outfielders[outfielders['Player_x'] == 'Cedric Mullins'])
 
 outfielders.to_csv('/home/adbucks/Downloads/outfielders.csv') 
 
+# we'll want to look at all pitchers, all outfielders, to get a sense of the distribution and then 
+# how our FA money can be best spent tomorrow 
+
+# First, let's see the total points distribution for all players, of pitchers and outfielders for 2023 and 22 data 
+
+# We'll start with pitchers 
+# Active players first and then we'll check everyone 
+
+# We'll start with 2023 data 
+# Density plot of points for pitchers in 2023 
+ 
+plt.figure(figsize = (10, 10)) 
+plt.hist(pitchers['FPts_23'], bins = 50, alpha = 0.5, label = '2023') 
+plt.hist(pitchers['FPts_22'], bins = 50, alpha = 0.5, label = '2022') 
+plt.legend(loc = 'upper right') 
+#plt.show() 
+
+# Let's get some value counts 
+print(pitchers.head())
+
+print(pitchers['FPts_23'].describe())
+print(pitchers['FPts_22'].describe())
+
+# want to print the column names 
+print(pitchers['Status_23'].value_counts())
+
+# Let's try and find some targets that might be good for our team 
+# We'll start with the 2023 data 
+# We'll start with the top 10% of pitchers in 2023 
+top_10_23 = pitchers[pitchers['Percentile_23'] > 0.9] 
+ 
+# Let's try and get a distribution of the outfielders also 
+print(outfielders['FPts_23'].describe())
+
+# Plotting for the outfielders now 
+plt.figure(figsize = (10, 10)) 
+plt.hist(outfielders['FPts_23'], bins = 50, alpha = 0.5, label = '2023') 
+plt.hist(outfielders['FPts_22'], bins = 50, alpha = 0.5, label = '2022') 
+plt.legend(loc = 'upper right') 
+#plt.show()
+
+# Let's try and replot with a point cutoff 
+outfielders_no_outliers = outfielders[outfielders['FPts_23'] > 150]
+
+# replotting 
+plt.figure(figsize = (10, 10)) 
+plt.hist(outfielders_no_outliers['FPts_23'], bins = 50, alpha = 0.5, label = '2023') 
+plt.hist(outfielders_no_outliers['FPts_22'], bins = 50, alpha = 0.5, label = '2022') 
+plt.legend(loc = 'upper right') 
+#plt.show()
+
+# Let's try and get some names of the 350-400 point outfielders 
+
+#print(outfielders_no_outliers[outfielders_no_outliers['FPts_23'] > 350])
+
+# Let's get all of our helpful csv's out, pull in the 2024 projections, and then we can start to make decisions 
+
+active_players_23.to_csv('/home/adbucks/Downloads/active_players_23.csv')
+
+
+'''
+
+4. The 2024 Projections 
+
+'''
+
+# we start by reading in projections, getting them for active players, and then joining to attempt to make some FA decisions 
+
+# reading in the 24 projections 
+
+league_24_projdf = pd.read_csv('/home/adbucks/Downloads/Fantrax-Players-SOBR FanTrax Mirror 2024_proj.csv')
+
+print(league_24_projdf.head())
+
+# drop the rostered column, and can get only the active players 
+league_24_projdf.drop(columns = 'Ros', inplace = True)
+
+# active players only 
+active_players_24 = league_24_projdf[league_24_projdf['Status'] != 'FA'] 
+
+# Let's try and get a sense of the distribution of points for all players, and then we can look at some targets, that sort of thing 
+
+plt.figure(figsize = (10, 10))
+plt.hist(active_players_24['FPts'], bins = 50, alpha = 0.5, label = '2024')
+plt.legend(loc = 'upper right')
+#plt.show()
+
+print(active_players_24['Status'].value_counts())
+
+# let's just pull out the 0's as this is surely minor leaguers and injured pitchers 
+active_players_24 = active_players_24[active_players_24['FPts'] > 0] 
+
+# try taking another look at the distribution 
+plt.figure(figsize = (10, 10))
+plt.hist(active_players_24['FPts'], bins = 50, alpha = 0.5, label = '2024') 
+plt.legend(loc = 'upper right') 
+#plt.show()
+
+# Looks slightly bi-modal, but let's try and zero in on an outfielder and a pitcher 
+# Focus on free agents that are projected to score real points (i.e. not minor leaguers)
+
+fa_targets = league_24_projdf[league_24_projdf['Status'] == 'FA']
+
+# Let's take a look at the data 
+
+print(fa_targets.head()) 
+
+# Cut out the minor leaguers and the injured arms 
+
+fa_targets = fa_targets[fa_targets['FPts'] > 0] 
+
+# Let's zero in on an outfielder 
+# We'll re-use the primary position code to just get the one position 
+
+fa_targets['Primary Position'] = fa_targets['Position'].apply(lambda x: left(x, 2)) 
+
+# Let's take a look at the data 
+
+print(fa_targets.head()) 
+print(fa_targets['Primary Position'].value_counts())
+
+of_fa = fa_targets[fa_targets['Primary Position'] == 'OF'] 
+
+# Let's take a look at the data 
+
+print(of_fa.head()) 
+
+# Let's try and get a sense of the distribution of points for outfielders 
+
+plt.figure(figsize = (10, 10)) 
+plt.hist(of_fa['FPts'], bins = 50, alpha = 0.5, label = '2024') 
+plt.legend(loc = 'upper right') 
+#plt.show()
+
+# Want to grab some summary statistics 
+print(of_fa['FPts'].describe())
+ 
+# Out of a regular starter we should want at least 300 points, so let's try and get some names of those that are projected to score at least 300 points 
+
+print(of_fa[of_fa['FPts'] > 300]) 
+
+# Variance is huge for all outfielders, so maybe if we narrow the targets down somewhat that might change 
+
+of_targets = of_fa[of_fa['FPts'] > 300] 
+
+# Let's take a look at the data 
+
+print(of_targets['FPts'].describe())
+
+# seems a bit more promising, let's plot and then export to a csv 
+
+plt.figure(figsize = (10, 10)) 
+plt.hist(of_targets['FPts'], bins = 50, alpha = 0.5, label = '2024') 
+plt.legend(loc = 'upper right') 
+# plt.show() 
+
+# Let's get a csv of the outfield targets 
+of_targets.to_csv('/home/adbucks/Downloads/of_targets.csv') 
+
+# we'll pull in past data and then can manually input their current price on the market to try and find a deal 
+# And then can recycle all of the code for pitchers 
+
+# left join with the 2023 and 22 points with the 24 projections 
+
+of_targets_test = pd.merge(of_targets, league_2223_df, on = 'ID', how = 'left')
+
+# Let's take a look at the data 
+
+print(of_targets_test.head()) 
+
+print(of_targets.shape)
+print(of_targets_test.shape)
+
+of_targets_test.to_csv('/home/adbucks/Downloads/of_targets_test.csv')
+
+# Now let's do the same for pitchers 
+
+sp_fa = fa_targets[fa_targets['Primary Position'] == 'SP'] 
+
+# Let's take a look at the data 
+
+print(sp_fa['FPts'].describe())
+
+# Let's try and get a sense of the distribution of points for starting pitchers 
+
+plt.figure(figsize = (10, 10))
+plt.hist(sp_fa['FPts'], bins = 50, alpha = 0.5, label = '2024') 
+plt.legend(loc = 'upper right') 
+# plt.show() 
+
+# Pitchers might be harder, let's say we want at least 300 points for a regular starter 
+
+sp_targets = sp_fa[sp_fa['FPts'] > 300] 
+
+# Let's take a look at the data 
+
+print(sp_targets['FPts'].describe())
+
+print(sp_targets.head())
+
+# Let's do the same join we did for the outfielders 
+
+sp_targets_test = pd.merge(sp_targets, league_2223_df, on = 'ID', how = 'left') 
+
+print(sp_targets_test.head())
+print(sp_targets.shape)
+print(sp_targets_test.shape)
+
+sp_targets_test.to_csv('/home/adbucks/Downloads/sp_targets_test.csv')
+
+
+'''
+
+print(of_targets_test.head()) 
+
+print(of_targets.shape)
+print(of_targets_test.shape)
+
+of_targets_test.to_csv('/home/adbucks/Downloads/of_targets_test.csv')
+
+'''
+
+# Side project -- What is a 400 point pitcher worth?
+
+league_2223_df.to_csv('/home/adbucks/Downloads/league_2223.csv')
 
 
